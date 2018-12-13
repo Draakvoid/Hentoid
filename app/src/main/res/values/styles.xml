@@ -25,4 +25,23 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
+
+    <style name="NumpadItem">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">64dp</item>
+    </style>
+
+    <style name="NumpadButton" parent="NumpadItem">
+        <item name="android:background">@drawable/bg_button_circle</item>
+    </style>
+
+    <style name="NumpadTextButton" parent="NumpadButton">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="NumpadImageButton" parent="NumpadButton">
+        <item name="android:padding">16dp</item>
+    </style>
 </resources>

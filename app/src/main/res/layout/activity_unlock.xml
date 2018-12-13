@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.UnlockActivity">
+
+    <TextView
+        android:id="@+id/textSpiel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:text="@string/app_lock_pin"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toStartOf="@id/image_lock_2"
+        app:layout_constraintStart_toEndOf="@id/image_lock_1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/image_lock_1"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginLeft="48dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_lock_closed"
+        app:layout_constraintBottom_toBottomOf="@id/textSpiel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/textSpiel" />
+
+    <ImageView
+        android:id="@+id/image_lock_2"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginRight="48dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_lock_closed"
+        app:layout_constraintBottom_toBottomOf="@id/textSpiel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/textSpiel" />
+
+    <ImageView
+        android:id="@+id/image_placeholder_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_circle"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/numpadFragment"
+        app:layout_constraintEnd_toEndOf="@id/line_1"
+        app:layout_constraintStart_toStartOf="@id/line_1"
+        app:layout_constraintTop_toBottomOf="@id/textSpiel" />
+
+    <ImageView
+        android:id="@+id/image_placeholder_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_circle"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/numpadFragment"
+        app:layout_constraintEnd_toEndOf="@id/line_2"
+        app:layout_constraintStart_toStartOf="@id/line_2"
+        app:layout_constraintTop_toBottomOf="@id/textSpiel" />
+
+    <ImageView
+        android:id="@+id/image_placeholder_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_circle"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/numpadFragment"
+        app:layout_constraintEnd_toEndOf="@id/line_3"
+        app:layout_constraintStart_toStartOf="@id/line_3"
+        app:layout_constraintTop_toBottomOf="@id/textSpiel" />
+
+    <ImageView
+        android:id="@+id/image_placeholder_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_circle"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/numpadFragment"
+        app:layout_constraintEnd_toEndOf="@id/line_4"
+        app:layout_constraintStart_toStartOf="@id/line_4"
+        app:layout_constraintTop_toBottomOf="@id/textSpiel" />
+
+    <View
+        android:id="@+id/line_1"
+        android:layout_width="40dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="24dp"
+        android:background="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@+id/line_2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image_placeholder_1" />
+
+    <View
+        android:id="@+id/line_2"
+        android:layout_width="40dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="24dp"
+        android:background="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@+id/line_3"
+        app:layout_constraintStart_toEndOf="@+id/line_1"
+        app:layout_constraintTop_toBottomOf="@id/image_placeholder_2" />
+
+    <View
+        android:id="@+id/line_3"
+        android:layout_width="40dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="24dp"
+        android:background="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@+id/line_4"
+        app:layout_constraintStart_toEndOf="@+id/line_2"
+        app:layout_constraintTop_toBottomOf="@id/image_placeholder_3" />
+
+    <View
+        android:id="@+id/line_4"
+        android:layout_width="40dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:background="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/line_3"
+        app:layout_constraintTop_toBottomOf="@id/image_placeholder_4" />
+
+    <fragment
+        android:id="@+id/numpadFragment"
+        android:name="me.devsaki.hentoid.fragments.NumpadFragment"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout="@layout/fragment_numpad" />
+
+</android.support.constraint.ConstraintLayout>
