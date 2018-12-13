@@ -46,6 +46,12 @@ public class RegisterPinActivity extends AppCompatActivity implements NumpadFrag
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        clearPin();
+    }
+
+    @Override
     public void onKeyClick(String s) {
         if (pinValue.length() == 4) return;
 
@@ -90,12 +96,16 @@ public class RegisterPinActivity extends AppCompatActivity implements NumpadFrag
             pinLayout.setVisibility(View.VISIBLE);
         } else {
             pinLayout.setVisibility(View.GONE);
-            pinValue.setLength(0);
-            placeholderImage1.setVisibility(View.INVISIBLE);
-            placeholderImage2.setVisibility(View.INVISIBLE);
-            placeholderImage3.setVisibility(View.INVISIBLE);
-            placeholderImage4.setVisibility(View.INVISIBLE);
+            clearPin();
             Preferences.setAppLockPin("");
         }
+    }
+
+    private void clearPin() {
+        pinValue.setLength(0);
+        placeholderImage1.setVisibility(View.INVISIBLE);
+        placeholderImage2.setVisibility(View.INVISIBLE);
+        placeholderImage3.setVisibility(View.INVISIBLE);
+        placeholderImage4.setVisibility(View.INVISIBLE);
     }
 }

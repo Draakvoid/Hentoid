@@ -66,6 +66,12 @@ public class UnlockActivity extends BaseActivity implements NumpadFragment.Paren
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        clearPin();
+    }
+
+    @Override
     public void onKeyClick(String s) {
         if (pinValue.length() == 4) return;
 
@@ -121,12 +127,16 @@ public class UnlockActivity extends BaseActivity implements NumpadFragment.Paren
             goToNextActivity();
         } else {
             spielText.setText(R.string.pin_invalid);
-            pinValue.setLength(0);
-            placeholderImage1.setVisibility(View.INVISIBLE);
-            placeholderImage2.setVisibility(View.INVISIBLE);
-            placeholderImage3.setVisibility(View.INVISIBLE);
-            placeholderImage4.setVisibility(View.INVISIBLE);
+            clearPin();
         }
+    }
+
+    private void clearPin() {
+        pinValue.setLength(0);
+        placeholderImage1.setVisibility(View.INVISIBLE);
+        placeholderImage2.setVisibility(View.INVISIBLE);
+        placeholderImage3.setVisibility(View.INVISIBLE);
+        placeholderImage4.setVisibility(View.INVISIBLE);
     }
 
     private void invokeVibrate() {
