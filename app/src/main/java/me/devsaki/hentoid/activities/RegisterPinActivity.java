@@ -3,6 +3,7 @@ package me.devsaki.hentoid.activities;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Switch;
 
@@ -10,13 +11,19 @@ import me.devsaki.hentoid.R;
 import me.devsaki.hentoid.fragments.NumpadFragment;
 import me.devsaki.hentoid.util.Preferences;
 
-// TODO: show an explanation for how app lock works when it is "ON" and place pin registration in a descendant screen
+// TODO: place pin registration in a descendant screen
 // TODO: refer to https://material.io/design/platform-guidance/android-settings.html#label-secondary-text for illustration
 // TODO: when app lock is "ON", show a "change pin" affordance
 // TODO: pin registration screen appears when app lock is turned on or when "change pin" is selected
+// TODO: implement viewmodel for this
+// TODO: use fragment for pinLayout
 public class RegisterPinActivity extends AppCompatActivity implements NumpadFragment.Parent {
 
     private final StringBuilder pinValue = new StringBuilder(4);
+
+    private View offGroup;
+
+    private View resetPinText;
 
     private View pinLayout;
 
@@ -33,8 +40,16 @@ public class RegisterPinActivity extends AppCompatActivity implements NumpadFrag
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_pin);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> finish());
+
         Switch lockSwitch = findViewById(R.id.switch_lock);
         lockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> onLockSwitchToggled(isChecked));
+
+        offGroup = findViewById(R.id.group_off);
+
+        resetPinText = findViewById(R.id.text_reset_pin);
+        resetPinText.setOnClickListener(v -> onResetPinClick());
 
         pinLayout = findViewById(R.id.layout_pin);
 
@@ -97,12 +112,19 @@ public class RegisterPinActivity extends AppCompatActivity implements NumpadFrag
 
     private void onLockSwitchToggled(boolean isOn) {
         if (isOn) {
-            pinLayout.setVisibility(View.VISIBLE);
+            resetPinText.setVisibility(View.VISIBLE);
+            offGroup.setVisibility(View.GONE);
         } else {
-            pinLayout.setVisibility(View.GONE);
+            resetPinText.setVisibility(View.GONE);
+            offGroup.setVisibility(View.VISIBLE);
             clearPin();
             Preferences.setAppLockPin("");
         }
+    }
+
+    private void onResetPinClick() {
+        pinLayout.setVisibility(View.VISIBLE);
+        resetPinText.setVisibility(View.GONE);
     }
 
     private void clearPin() {
