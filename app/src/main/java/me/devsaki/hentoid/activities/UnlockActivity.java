@@ -15,7 +15,10 @@ import me.devsaki.hentoid.fragments.NumpadFragment;
 import me.devsaki.hentoid.util.Preferences;
 
 /**
- * This activity asks for a 4 digit pin if it is set and transitions to another activity
+ * This activity asks for a 4 digit pin if it is set and then transitions to another activity
+ * <p>
+ * TODO: Currently only used to protect app launch from launcher. Look for other ways to launch the
+ * app which should be protected
  *
  * @see #wrapIntent(Context, Intent)
  */
@@ -23,8 +26,19 @@ public class UnlockActivity extends BaseActivity implements NumpadFragment.Paren
 
     private static final String EXTRA_DEFAULT = "default";
 
+    /**
+     * This is reset to false at an undefined time, usually due to process death.
+     */
     private static boolean isUnlocked = false;
 
+    /**
+     * Creates an intent that launches this activity before launching the given wrapped intent
+     *
+     * @param context           used for creating the return intent
+     * @param destinationIntent intent that refers to the next activity
+     * @return intent that launches this activity which leads to another activity referred to by
+     * {@code destinationIntent}
+     */
     public static Intent wrapIntent(Context context, Intent destinationIntent) {
         Intent intent = new Intent(context, UnlockActivity.class);
         intent.putExtra(EXTRA_DEFAULT, destinationIntent);

@@ -10,6 +10,10 @@ import me.devsaki.hentoid.R;
 import me.devsaki.hentoid.fragments.NumpadFragment;
 import me.devsaki.hentoid.util.Preferences;
 
+// TODO: show an explanation for how app lock works when it is "ON" and place pin registration in a descendant screen
+// TODO: refer to https://material.io/design/platform-guidance/android-settings.html#label-secondary-text for illustration
+// TODO: when app lock is "ON", show a "change pin" affordance
+// TODO: pin registration screen appears when app lock is turned on or when "change pin" is selected
 public class RegisterPinActivity extends AppCompatActivity implements NumpadFragment.Parent {
 
     private final StringBuilder pinValue = new StringBuilder(4);
