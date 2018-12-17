@@ -529,6 +529,7 @@ public abstract class DownloadsFragment extends BaseFragment implements ContentL
                 .setItemSelectListener(this)
                 .setOnContentsClearedListener(this::onContentsCleared)
                 .setOnContentRemovedListener(this::onContentRemoved)
+                .setOnItemSourceClickListener(this::onItemSourceClick)
                 .build();
 
         // Main view
@@ -1255,5 +1256,9 @@ public abstract class DownloadsFragment extends BaseFragment implements ContentL
         mTotalSelectedCount = mTotalSelectedCount - i;
         mTotalCount = mTotalCount - i;
         updateTitle();
+    }
+
+    private void onItemSourceClick(Content content) {
+        Helper.viewContent(requireContext(), content);
     }
 }

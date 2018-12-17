@@ -14,8 +14,7 @@
         android:layout_marginRight="5dp"
         android:adjustViewBounds="true"
         android:padding="1dp"
-        tools:ignore="ContentDescription"
-        />
+        tools:ignore="ContentDescription" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,31 +22,57 @@
         android:layout_gravity="center_horizontal"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvSeries"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            tools:text="Series: Name" />
+            android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/tvArtist"
-            android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Series: "
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvSeries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                tools:text="Name" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            tools:text="Artist: Name" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artist: "
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                tools:text="Name uu hni iounoi unoiu noiun oiungduiw nu nuhnuih" />
+
+        </LinearLayout>
 
         <View
             android:layout_width="fill_parent"
             android:layout_height="1dp"
-            android:layout_marginBottom="5dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginLeft="1dp"
-            android:layout_marginRight="10dp"
             android:layout_marginStart="1dp"
+            android:layout_marginLeft="1dp"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="5dp"
             android:background="@android:color/holo_red_light" />
 
         <TextView
@@ -55,12 +80,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|start"
-            android:layout_marginBottom="5dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginLeft="1dp"
-            android:layout_marginRight="10dp"
             android:layout_marginStart="1dp"
+            android:layout_marginLeft="1dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="5dp"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#B40404"
+            android:textStyle="bold"
             tools:text="tag1, tag2, tag3, etc." />
     </LinearLayout>
 </LinearLayout>

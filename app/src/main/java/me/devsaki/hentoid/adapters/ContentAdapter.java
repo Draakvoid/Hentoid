@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Objects;
 import com.annimon.stream.Stream;
+import com.annimon.stream.function.Consumer;
 import com.annimon.stream.function.IntConsumer;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
@@ -51,7 +52,23 @@ import me.devsaki.hentoid.util.Helper;
 import timber.log.Timber;
 
 /**
- * Created by avluis on 04/23/2016. RecyclerView based Content Adapter
+ * Created by avluis on 04/23/2016.
+ * RecyclerView based Content Adapter
+ * <p>
+ * TODO issue: This class has too many responsibilities. The ideal is to only handle view inflation and data binding.
+ * It is best to delegate behavior by using Observer pattern.
+ * Data should be given to adapters but adapters must only view the data and not make changes.
+ * Additional responsibilities include:
+ * - item selection management such as {@link #toggleSelection(int)}, {@link #clearSelections()}, etc.
+ * - data manipulation such as {@link #add(List)}, {@link #remove(Content)}, etc.
+ * - download management such as {@link #downloadContent(Content)} & {@link #downloadAgain(Content)}
+ * - item action handling behavior such as {@link #shareContent(Content)}, {@link #archiveContent(Content)}, {@link #deleteContent(Content)}, etc.
+ * <p>
+ * TODO issue: {@link #onBindViewHolder(ContentHolder, int)} is too inefficient.
+ * It is best to do most work in {@link #onCreateViewHolder(ViewGroup, int)} such as setting click listeners.
+ * Parsing data should not be done in onBindViewHolder because it may happen several times for one item.
+ * A business object modeling parsed data can be created once and used several times to avoid parsing during binding.
+ * Conditional handling should not be done during binding. Instead, different viewtypes and viewholders may be used.
  */
 public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implements ContentListener {
 
@@ -62,6 +79,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
     private final ItemSelectListener itemSelectListener;
     private final IntConsumer onContentRemovedListener;
     private final Runnable onContentsClearedListener;
+    private final Consumer<Content> onItemSourceClickListener;
     private final CollectionAccessor collectionAccessor;
     private final int displayMode;
     private final RequestOptions glideRequestOptions;
@@ -74,6 +92,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
         itemSelectListener = builder.itemSelectListener;
         onContentRemovedListener = builder.onContentRemovedListener;
         onContentsClearedListener = builder.onContentsClearedListener;
+        onItemSourceClickListener = builder.onItemSourceClickListener;
         collectionAccessor = builder.collectionAccessor;
         sortComparator = builder.sortComparator;
         displayMode = builder.displayMode;
@@ -277,7 +296,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
     private void attachSiteButtonIcon(ContentHolder holder, final Content content) {
         if (content.getSite() != null) {
             holder.ivSite.setImageResource(content.getSite().getIco());
-            holder.ivSite.setOnClickListener(v -> Helper.viewContent(context, content));
+            holder.ivSite.setOnClickListener(v -> onItemSourceClickListener.accept(content));
         } else {
             holder.ivSite.setImageResource(R.drawable.ic_stat_hentoid);
         }
@@ -359,51 +378,49 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
         }
     }
 
+    // TODO : implement preview gallery for Mikan mode
     private void attachOnClickListeners(final ContentHolder holder, Content content, int pos) {
+        // Libray mode only
+        if (DownloadsFragment.MODE_LIBRARY != displayMode) return;
 
-        // Simple click = open book (library mode only)
-        // TODO : implement preview gallery for Mikan mode
-        if (DownloadsFragment.MODE_LIBRARY == displayMode) {
-            holder.itemView.setOnClickListener(new ItemClickListener(context, content, pos, itemSelectListener) {
+        // Simple click = open book
+        holder.itemView.setOnClickListener(new ItemClickListener(context, content, pos, itemSelectListener) {
 
-                @Override
-                public void onClick(View v) {
-                    if (getSelectedItemsCount() > 0) { // Selection mode is on
-                        int itemPos = holder.getLayoutPosition();
-                        toggleSelection(itemPos);
-                        setSelected(isSelectedAt(pos), getSelectedItemsCount());
-                        onLongClick(v);
-                    } else {
-                        clearSelections();
-                        setSelected(false, 0);
-
-                        super.onClick(v);
-
-                        if (sortComparator.equals(Content.READ_DATE_INV_COMPARATOR)
-                                || sortComparator.equals(Content.READS_ORDER_COMPARATOR)
-                                || sortComparator.equals(Content.READS_ORDER_INV_COMPARATOR))
-                            mSortedList.recalculatePositionOfItemAt(pos); // Reading the book has an effect on its position
-                    }
-                }
-            });
-        }
-
-        // Long click = select item (library mode only)
-        if (DownloadsFragment.MODE_LIBRARY == displayMode) {
-            holder.itemView.setOnLongClickListener(new ItemClickListener(context, content, pos, itemSelectListener) {
-
-                @Override
-                public boolean onLongClick(View v) {
+            @Override
+            public void onClick(View v) {
+                if (getSelectedItemsCount() > 0) { // Selection mode is on
                     int itemPos = holder.getLayoutPosition();
                     toggleSelection(itemPos);
                     setSelected(isSelectedAt(pos), getSelectedItemsCount());
+                    onLongClick(v);
+                } else {
+                    clearSelections();
+                    setSelected(false, 0);
 
-                    super.onLongClick(v);
+                    super.onClick(v);
 
-                    return true;
+                    if (sortComparator.equals(Content.READ_DATE_INV_COMPARATOR)
+                            || sortComparator.equals(Content.READS_ORDER_COMPARATOR)
+                            || sortComparator.equals(Content.READS_ORDER_INV_COMPARATOR))
+                        mSortedList.recalculatePositionOfItemAt(pos); // Reading the book has an effect on its position
                 }
-            });
-        }
+            }
+        });
+
+        // Long click = select item
+        holder.itemView.setOnLongClickListener(new ItemClickListener(context, content, pos, itemSelectListener) {
+
+            @Override
+            public boolean onLongClick(View v) {
+                int itemPos = holder.getLayoutPosition();
+                toggleSelection(itemPos);
+                setSelected(isSelectedAt(pos), getSelectedItemsCount());
+
+                super.onLongClick(v);
+
+                return true;
+            }
+        });
     }
 
     private void downloadAgain(final Content item) {
@@ -762,6 +779,7 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
         private ItemSelectListener itemSelectListener;
         private IntConsumer onContentRemovedListener;
         private Runnable onContentsClearedListener;
+        private Consumer<Content> onItemSourceClickListener;
         private CollectionAccessor collectionAccessor;
         private Comparator<Content> sortComparator;
         private int displayMode;
@@ -798,6 +816,11 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
 
         public Builder setOnContentsClearedListener(Runnable onContentsClearedListener) {
             this.onContentsClearedListener = onContentsClearedListener;
+            return this;
+        }
+
+        public Builder setOnItemSourceClickListener(Consumer<Content> onItemSourceClickListener) {
+            this.onItemSourceClickListener = onItemSourceClickListener;
             return this;
         }
 
