@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -16,17 +17,19 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
+import com.annimon.stream.Collectors;
+import com.annimon.stream.Objects;
+import com.annimon.stream.Stream;
 import com.annimon.stream.function.IntConsumer;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import me.devsaki.hentoid.R;
@@ -141,190 +144,154 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
         libraryView = recyclerView;
     }
 
+    /**
+     * Using application context when glide loading to avoid crashes when activity is destroyed
+     * https://stackoverflow.com/questions/39093730/you-cannot-start-a-load-for-a-destroyed-activity-in-relativelayout-image-using-g
+     * <p>
+     * TODO: binding should be done by the ViewHolder
+     */
     @Override
     public void onBindViewHolder(@NonNull ContentHolder holder, final int pos) {
-        Content content = mSortedList.get(pos);
-
-        // Initializes the ViewHolder that contains the books
-        updateLayoutVisibility(holder, content, pos);
-        attachTitle(holder, content);
-        attachCover(holder, content);
-        attachSeries(holder, content);
-        attachArtist(holder, content);
-        attachTags(holder, content);
-        attachButtons(holder, content, pos);
-        attachOnClickListeners(holder, content, pos);
-    }
-
-    private void updateLayoutVisibility(ContentHolder holder, Content content, int pos) {
         if (pos == getItemCount() - VISIBLE_THRESHOLD && onScrollToEndListener != null) {
             onScrollToEndListener.run();
         }
 
-        int itemPos = holder.getLayoutPosition();
-        holder.itemView.setSelected(isSelectedAt(itemPos));
+        Content content = mSortedList.get(pos);
 
-        final RelativeLayout items = holder.itemView.findViewById(R.id.item);
-        LinearLayout minimal = holder.itemView.findViewById(R.id.item_minimal);
+        holder.itemView.setSelected(content.isSelected());
 
-        if (holder.itemView.isSelected()) {
-            Timber.d("Position: %s %s is a selected item currently in view.", pos, content.getTitle());
+        // TODO: a different ViewHolder with a different layout should be used for selected and unselected items
+        if (content.isSelected()) {
+            holder.itemLayout.setVisibility(View.GONE);
+            holder.minimalLayout.setVisibility(View.VISIBLE);
+            holder.tvTitle2.setText(extractTitle(content));
 
-            if (getSelectedItemsCount() >= 1) {
-                items.setVisibility(View.GONE);
-                minimal.setVisibility(View.VISIBLE);
-            }
+            Glide.with(context.getApplicationContext())
+                    .load(FileHelper.getThumb(content))
+                    .apply(glideRequestOptions)
+                    .into(holder.ivCover2);
         } else {
-            items.setVisibility(View.VISIBLE);
-            minimal.setVisibility(View.GONE);
+            holder.itemLayout.setVisibility(View.VISIBLE);
+            holder.minimalLayout.setVisibility(View.GONE);
+            holder.tvTitle.setText(extractTitle(content));
+
+            Glide.with(context.getApplicationContext())
+                    .load(FileHelper.getThumb(content))
+                    .apply(glideRequestOptions)
+                    .into(holder.ivCover);
+
+            holder.ivNew.setVisibility((0 == content.getReads()) ? View.VISIBLE : View.GONE);
+            holder.tvSeries.setText(extractSeries(content));
+            holder.tvArtist.setText(extractArtist(content));
+            holder.tvTags.setText(extractTags(content));
         }
+
+        attachSiteButtonIcon(holder, content);
+        attachButtons(holder, content);
+        attachOnClickListeners(holder, content, pos);
     }
 
-    private void attachTitle(ContentHolder holder, Content content) {
-        CharSequence title;
+    @Override
+    public void onViewRecycled(@NonNull ContentHolder holder) {
+        RequestManager requestManager = Glide.with(context.getApplicationContext());
+        requestManager.clear(holder.ivCover);
+        requestManager.clear(holder.ivCover2);
+    }
+
+    private CharSequence extractTitle(Content content) {
         if (content.getTitle() == null) {
-            title = context.getText(R.string.work_untitled);
+            return context.getText(R.string.work_untitled);
         } else {
-            title = content.getTitle();
+            return content.getTitle();
         }
-
-        holder.tvTitle.setText(title);
-        if (holder.itemView.isSelected()) {
-            holder.tvTitle2.setText(title);
-        }
-
-        holder.ivNew.setVisibility((0 == content.getReads()) ? View.VISIBLE : View.GONE);
     }
 
-    private void attachCover(ContentHolder holder, Content content) {
-        ImageView image = holder.itemView.isSelected() ? holder.ivCover2 : holder.ivCover;
-
-        // The following is needed due to RecyclerView recycling layouts and
-        // Glide not considering the layout invalid for the current image:
-        // https://github.com/bumptech/glide/issues/835#issuecomment-167438903
-        //
-        // Using application context to avoid crashes when activity is destroyed
-        // https://stackoverflow.com/questions/39093730/you-cannot-start-a-load-for-a-destroyed-activity-in-relativelayout-image-using-g
-        Glide.with(context.getApplicationContext()).clear(image);
-        Glide.with(context.getApplicationContext())
-                .load(FileHelper.getThumb(content))
-                .apply(glideRequestOptions)
-                .into(image);
-    }
-
-    private void attachSeries(ContentHolder holder, Content content) {
-        String templateSeries = context.getResources().getString(R.string.work_series);
-        StringBuilder seriesBuilder = new StringBuilder();
+    private CharSequence extractSeries(Content content) {
+        String series;
         List<Attribute> seriesAttributes = content.getAttributes().get(AttributeType.SERIE);
         if (seriesAttributes == null) {
-            holder.tvSeries.setVisibility(View.GONE);
+            series = context.getResources().getString(R.string.work_untitled);
         } else {
-            for (int i = 0; i < seriesAttributes.size(); i++) {
-                Attribute attribute = seriesAttributes.get(i);
-                seriesBuilder.append(attribute.getName());
-                if (i != seriesAttributes.size() - 1) {
-                    seriesBuilder.append(", ");
-                }
-            }
-            holder.tvSeries.setVisibility(View.VISIBLE);
+            series = Stream.of(seriesAttributes)
+                    .map(Attribute::getName)
+                    .collect(Collectors.joining(", "));
         }
-        holder.tvSeries.setText(Helper.fromHtml(templateSeries.replace("@series@", seriesBuilder.toString())));
-
-        if (seriesAttributes == null) {
-            holder.tvSeries.setText(Helper.fromHtml(templateSeries.replace("@series@",
-                    context.getResources().getString(R.string.work_untitled))));
-            holder.tvSeries.setVisibility(View.VISIBLE);
-        }
+        String templateSeries = context.getResources().getString(R.string.work_series);
+        return Helper.fromHtml(templateSeries.replace("@series@", series));
     }
 
-    private void attachArtist(ContentHolder holder, Content content) {
-        String templateArtist = context.getResources().getString(R.string.work_artist);
-        StringBuilder artistsBuilder = new StringBuilder();
-        List<Attribute> attributes = new ArrayList<>();
+    private CharSequence extractArtist(Content content) {
+        String artists;
+        List<Attribute> attributes = new LinkedList<>();
         List<Attribute> artistAttributes = content.getAttributes().get(AttributeType.ARTIST);
         if (artistAttributes != null) attributes.addAll(artistAttributes);
         List<Attribute> circleAttributes = content.getAttributes().get(AttributeType.CIRCLE);
         if (circleAttributes != null) attributes.addAll(circleAttributes);
 
         if (attributes.isEmpty()) {
-            holder.tvArtist.setVisibility(View.GONE);
+            artists = context.getResources().getString(R.string.work_untitled);
         } else {
-            boolean first = true;
-            for (Attribute attribute : attributes) {
-                if (first) first = false;
-                else artistsBuilder.append(", ");
-                artistsBuilder.append(attribute.getName());
-            }
-            holder.tvArtist.setVisibility(View.VISIBLE);
+            artists = Stream.of(attributes)
+                    .map(Attribute::getName)
+                    .collect(Collectors.joining(", "));
         }
-        holder.tvArtist.setText(Helper.fromHtml(templateArtist.replace("@artist@", artistsBuilder.toString())));
 
-        if (attributes.isEmpty()) {
-            holder.tvArtist.setText(Helper.fromHtml(templateArtist.replace("@artist@",
-                    context.getResources().getString(R.string.work_untitled))));
-            holder.tvArtist.setVisibility(View.VISIBLE);
-        }
+        String templateArtist = context.getResources().getString(R.string.work_artist);
+        return Helper.fromHtml(templateArtist.replace("@artist@", artists));
     }
 
-    private void attachTags(ContentHolder holder, Content content) {
-        String templateTags = context.getResources().getString(R.string.work_tags);
-        StringBuilder tagsBuilder = new StringBuilder();
+    private CharSequence extractTags(Content content) {
         List<Attribute> tagsAttributes = content.getAttributes().get(AttributeType.TAG);
-        if (tagsAttributes != null) {
-            for (int i = 0; i < tagsAttributes.size(); i++) {
-                Attribute attribute = tagsAttributes.get(i);
-                if (attribute.getName() != null) {
-                    tagsBuilder.append(templateTags.replace("@tag@", attribute.getName()));
-                    if (i != tagsAttributes.size() - 1) {
-                        tagsBuilder.append(", ");
-                    }
-                }
-            }
+        if (tagsAttributes == null) {
+            return "";
+        } else {
+            CharSequence tags = Stream.of(tagsAttributes)
+                    .map(Attribute::getName)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(", "));
+            String templateTags = context.getResources().getString(R.string.work_tags);
+            return Helper.fromHtml(templateTags.replace("@tag@", tags));
         }
-        holder.tvTags.setText(Helper.fromHtml(tagsBuilder.toString()));
     }
 
-    private void attachButtons(ContentHolder holder, final Content content, int pos) {
-        // Set source icon
+    @ColorInt
+    private int extractSiteButtonBg(Content content) {
+        int bgColorRes;
+        switch (content.getStatus()) {
+            case DOWNLOADED:
+                bgColorRes = R.color.card_item_src_normal;
+                break;
+            case MIGRATED:
+                bgColorRes = R.color.card_item_src_migrated;
+                break;
+            case ONLINE:
+                bgColorRes = R.color.card_item_src_other;
+                break;
+            default:
+                bgColorRes = R.color.card_item_src_other;
+                break;
+        }
+        return ContextCompat.getColor(context, bgColorRes);
+    }
+
+    private void attachSiteButtonIcon(ContentHolder holder, final Content content) {
         if (content.getSite() != null) {
-            int img = content.getSite().getIco();
-            holder.ivSite.setImageResource(img);
-            holder.ivSite.setOnClickListener(v -> {
-                if (getSelectedItemsCount() >= 1) {
-                    clearSelections();
-                    itemSelectListener.onItemClear(0);
-                }
-                Helper.viewContent(context, content);
-            });
+            holder.ivSite.setImageResource(content.getSite().getIco());
+            holder.ivSite.setOnClickListener(v -> Helper.viewContent(context, content));
         } else {
             holder.ivSite.setImageResource(R.drawable.ic_stat_hentoid);
         }
+        holder.ivSite.setBackgroundColor(extractSiteButtonBg(content));
+    }
 
+    private void attachButtons(ContentHolder holder, final Content content) {
         // Set source color
         if (content.getStatus() != null) {
-            StatusContent status = content.getStatus();
-            int bg;
-            switch (status) {
-                case DOWNLOADED:
-                    bg = R.color.card_item_src_normal;
-                    break;
-                case MIGRATED:
-                    bg = R.color.card_item_src_migrated;
-                    break;
-                case ONLINE:
-                    bg = R.color.card_item_src_other;
-                    break;
-                default:
-                    Timber.d("Position: %s %s - Status: %s", pos, content.getTitle(), status);
-                    bg = R.color.card_item_src_other;
-                    break;
-            }
-            holder.ivSite.setBackgroundColor(ContextCompat.getColor(context, bg));
-
             holder.ivFavourite.setVisibility((DownloadsFragment.MODE_LIBRARY == displayMode) ? View.VISIBLE : View.GONE);
             holder.ivError.setVisibility((DownloadsFragment.MODE_LIBRARY == displayMode) ? View.VISIBLE : View.GONE);
             holder.ivDownload.setVisibility((DownloadsFragment.MODE_MIKAN == displayMode) ? View.VISIBLE : View.GONE);
 
+            StatusContent status = content.getStatus();
             if (DownloadsFragment.MODE_LIBRARY == displayMode) {
                 // Favourite toggle
                 if (content.isFavourite()) {
@@ -549,8 +516,8 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
     }
 
     /**
-     * Change the state of the item relative to the given content to "downloaded"
-     * NB : Specific to Mikan screen
+     * Change the state of the item relative to the given content to "downloaded" NB : Specific to
+     * Mikan screen
      *
      * @param content content that has been downloaded
      */
