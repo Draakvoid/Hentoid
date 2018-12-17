@@ -147,7 +147,12 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
 
         // Initializes the ViewHolder that contains the books
         updateLayoutVisibility(holder, content, pos);
-        populateLayout(holder, content, pos);
+        attachTitle(holder, content);
+        attachCover(holder, content);
+        attachSeries(holder, content);
+        attachArtist(holder, content);
+        attachTags(holder, content);
+        attachButtons(holder, content, pos);
         attachOnClickListeners(holder, content, pos);
     }
 
@@ -173,15 +178,6 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentHolder> implemen
             items.setVisibility(View.VISIBLE);
             minimal.setVisibility(View.GONE);
         }
-    }
-
-    private void populateLayout(ContentHolder holder, final Content content, int pos) {
-        attachTitle(holder, content);
-        attachCover(holder, content);
-        attachSeries(holder, content);
-        attachArtist(holder, content);
-        attachTags(holder, content);
-        attachButtons(holder, content, pos);
     }
 
     private void attachTitle(ContentHolder holder, Content content) {
